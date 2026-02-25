@@ -1,0 +1,157 @@
+import time
+import requests
+import tkinter as tk
+import json
+
+Bearer = input("Введите токен")
+complex_list = []
+for i in range(0, 5000, 500):
+    url = "https://api.geniemap.net/v1/projects"
+    headers = {
+        "Authorization": f"Bearer {Bearer}",
+        "Accept": "application/json"
+    }
+    params = {
+        "offset": f"{i}",
+        "limit": 500,
+        "status": "available"
+    }
+    response = requests.get(url, headers=headers, params=params)
+    response.encoding = 'utf-8'
+    all_complex = response.json()
+    for a in all_complex:
+        complex_list.append(a)
+
+for i in range(0, 5000, 500):
+    url = "https://api.geniemap.net/v1/projects"
+    headers = {
+        "Authorization": f"Bearer {Bearer}",
+        "Accept": "application/json"
+    }
+    params = {
+        "offset": f"{i}",
+        "limit": 500,
+        "status": "launch"
+    }
+    response = requests.get(url, headers=headers, params=params)
+    response.encoding = 'utf-8'
+    all_complex = response.json()
+    for a in all_complex:
+        complex_list.append(a)
+
+
+def filter_list(*args):
+    search_text = search_var.get().lower()
+    listbox.delete(0, tk.END)
+    for name in complex_list:
+        if search_text in name["name"].lower():
+            listbox.insert(tk.END, name["name"])
+
+
+def get_data(i, text_widget):
+    """загружает квартиры и выводит в переданный text_widget"""
+    try:
+        z = []
+        for a in range(0, 2000, 1000):
+            url = f"https://api.geniemap.net/v1/projects/{i}/units"
+            headers = {
+                "Authorization": "Bearer 82|3rWwoKa2EyKsIWcQG8StDQmlFPXvOig5NqpELMF78d7ade87",
+                "Accept": "application/json"
+            }
+            params = {"offset": f"{a}", "limit": 1000}
+            response = requests.get(url, headers=headers, params=params)
+            response.encoding = 'utf-8'
+            for item in response.json():
+                z.append(item)
+            time.sleep(0.3)
+
+        count = len(z)
+
+        text_widget.delete(1.0, tk.END)
+        text_widget.insert(tk.END, f"Квартир в этом ЖК: {count}\n\n")
+        text_widget.insert(tk.END, json.dumps(z, indent=4, ensure_ascii=False))
+    except Exception as e:
+        text_widget.delete(1.0, tk.END)
+        text_widget.insert(tk.END, f"Ошибка: {e}")
+
+
+def on_select(event):
+    """обновляет нижнее окно квартирами выбранного ЖК"""
+    if listbox.curselection():
+        index = listbox.curselection()[0]
+        selected_name = listbox.get(index)
+        project_id = next((item["id"] for item in complex_list if item["name"] == selected_name), None)
+        if project_id:
+            get_data(project_id, output_text)
+
+
+def open_complex_window():
+    """открыть отдельное окно с данными про выбранный ЖК (без квартир)"""
+    if listbox.curselection():
+        index = listbox.curselection()[0]
+        selected_name = listbox.get(index)
+        project = next((item for item in complex_list if item["name"] == selected_name), None)
+        if not project:
+            return
+
+        win = tk.Toplevel(root)
+        win.title(f"Инфо о ЖК {selected_name}")
+        win.geometry("700x600")
+
+        text = tk.Text(win, wrap="word")
+        text.pack(fill="both", expand=True)
+
+        text.insert(tk.END, json.dumps(project, indent=4, ensure_ascii=False))
+
+
+root = tk.Tk()
+root.title("Новостройки ОАЭ")
+root.geometry("900x700")
+bg_color = "#40E0D0"
+root.configure(bg=bg_color)
+
+search_frame = tk.Frame(root)
+search_frame.pack(fill="x", padx=10, pady=5)
+tk.Label(search_frame, text="Поиск").pack(side="left")
+
+search_var = tk.StringVar()
+search_entry = tk.Entry(search_frame, textvariable=search_var)
+search_entry.pack(side="left", fill="x", expand=True, padx=5)
+
+frame = tk.Frame(root)
+frame.pack(fill="x", padx=10, pady=5)
+
+scrollbar = tk.Scrollbar(frame)
+scrollbar.pack(side="right", fill="y")
+
+listbox = tk.Listbox(frame, height=5, yscrollcommand=scrollbar.set)
+listbox.pack(side="left", fill="both", expand=True)
+scrollbar.config(command=listbox.yview)
+
+for name in complex_list:
+    try:
+        listbox.insert(tk.END, name["name"])
+    except:
+        continue
+
+search_var.trace_add("write", filter_list)
+listbox.bind("<<ListboxSelect>>", on_select)
+
+count_label = tk.Label(root, text=f"Объектов: {len(complex_list)}", bg=bg_color)
+count_label.pack(pady=5)
+
+# кнопка для открытия отдельного окна с инфо о ЖК
+open_btn = tk.Button(root, text="Открыть данные про ЖК", command=open_complex_window)
+open_btn.pack(pady=5)
+
+output_frame = tk.Frame(root)
+output_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+output_scroll = tk.Scrollbar(output_frame)
+output_scroll.pack(side="right", fill="y")
+
+output_text = tk.Text(output_frame, wrap="word", height=20, yscrollcommand=output_scroll.set)
+output_text.pack(side="left", fill="both", expand=True)
+output_scroll.config(command=output_text.yview)
+
+root.mainloop()
