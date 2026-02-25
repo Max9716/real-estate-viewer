@@ -34,4 +34,5 @@ REST API
 Формирование пользовательского интерфейса
 
 git clone https://github.com/Max9716/real-estate-viewer
+
 cd real_estate_viewer
