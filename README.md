@@ -32,3 +32,6 @@ REST API
 Работа с асинхронными запросами (через пагинацию)
 Фильтрация и поиск по данным
 Формирование пользовательского интерфейса
+
+git clone https://github.com/Max9716/real-estate-viewer
+cd real_estate_viewer
