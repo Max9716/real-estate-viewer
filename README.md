@@ -33,7 +33,6 @@ REST API
 Фильтрация и поиск по данным
 Формирование пользовательского интерфейса
 
-Установка и запуск
-git clone https://github.com/Max9716/real-estate-viewer
-
+Установка и запуск:
+git clone https://github.com/Max9716/real-estate-viewer 
 cd real_estate_viewer
